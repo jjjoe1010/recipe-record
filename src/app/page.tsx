@@ -29,6 +29,23 @@ export default function Home() {
           </form>
         </div>
       </div>
+      <div className="px-10">
+        <table className="table-fixed min-w-full">
+          <tr className="text-left bg-gray-400/80">
+            <th>Recipe</th>
+            <th>Origin</th>
+            <th>Date Created</th>
+            <th>Rating</th>
+          </tr>
+          <tr className=" hover:bg-gray-300">
+            <td className="text-left">Gyu Don</td>
+            <td className="text-left">Japanese</td>
+            <td className="text-left">17/04/25</td>
+            <td className="text-left">8/10</td>
+          </tr>
+        </table>
+      </div>
     </section>
   );
 }
+[]
