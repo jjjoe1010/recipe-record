@@ -1,10 +1,11 @@
 "use client"
 import Image from "next/image";
 import { storedRecipe } from "./storage"
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getRecipesFromMongo } from "@/db/database"
 
 interface Recipe {
-  id: number;
+  _id: any;
   recipeName: string;
   origin: string;
   dateCreated: string;
@@ -15,9 +16,20 @@ interface Recipe {
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [recipes, setRecipes] = useState<Recipe[]>(storedRecipe);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [header, setHeader] = useState<keyof Recipe>("recipeName");
   const [direction, setDirection] = useState("unsorted");
+
+   useEffect(() => {
+    async function fetchData() {
+      const data: Array<Recipe> | any = await getRecipesFromMongo();
+      if (data) {
+      setRecipes(data)
+      }
+    }
+
+    fetchData();
+  }, []);
   
   function handleSearch(formData:FormData){
     const query = formData.get("query");
@@ -27,24 +39,41 @@ export default function Home() {
   }
 
   function createRecipe(){
-    console.log("create new recipe")
+    console.log("Create Recipe")
+    // // Resolve -> ID doesnt auto increment
+    // const maxId = recipes.length > 0 ? Math.max(...recipes.map(r => r.id)) : 0;
+    // let newRecipe = {
+    //   id: maxId + 1,
+    //   recipeName: "Hong Shao Rou",
+    //   origin: "China",
+    //   dateCreated: "26/04/25",
+    //   ingridients: "Pork Belly, Rice",
+    //   steps: "4",
+    //   rating: "10/10",
+    // };
+
+    // let y = [
+    //   ...recipes,
+    //   newRecipe
+    // ]
+    // console.log(y)
+    // setRecipes(y)
   }
 
-  function handleSort(header: keyof Recipe){
-    setHeader(header)
-    let sortedRecipe = [...recipes].sort((a,b) => {
+  function handleSort(header: keyof Recipe) {
+    setHeader(header);
+    let sortedRecipe = [...recipes].sort((a, b) => {
+      let nameA: string | number = a[header];
+      let nameB: string | number = b[header];
 
-    let nameA: string | number = a[header]
-    let nameB: string | number = b[header]
+      if (typeof nameA === "string" && typeof nameB === "string") {
+        nameA = nameA.toUpperCase();
+        nameB = nameB.toUpperCase();
+      }
 
-    if (typeof nameA === "string" && typeof nameB === "string") {
-      nameA = nameA.toUpperCase()
-      nameB = nameB.toUpperCase()
-    }
-      
       // unsorted, sorted, inverse sorted
       if (direction === "descending" || direction === "unsorted") {
-        setDirection("ascending")
+        setDirection("ascending");
         if (nameA < nameB) {
           return -1;
         }
@@ -54,18 +83,18 @@ export default function Home() {
         return 0;
       }
       if (direction === "ascending") {
-        setDirection("descending")
+        setDirection("descending");
         if (nameA < nameB) {
           return 1;
         }
         if (nameA > nameB) {
           return -1;
         }
-        return 0; 
+        return 0;
       }
       return 0;
     });
-   setRecipes(sortedRecipe)
+    setRecipes(sortedRecipe);
   }
 
   return (
@@ -80,10 +109,10 @@ export default function Home() {
       </div>
       <div>
         <div className="flex justify-end pt-20 pr-14 pb-10">
-          <form action={handleSearch}>
+          {/* <form action={handleSearch}>
             <input name="query" />
             <button type="submit">Search</button>
-          </form>
+          </form> */}
         </div>
       </div>
       <div className="px-10">
@@ -98,8 +127,8 @@ export default function Home() {
             </tr>            
           </thead>
           <tbody>
-            {recipes.map((item) => (
-            <tr className=" hover:bg-gray-300" key={item.id}>
+            {recipes && recipes.map((item) => (
+            <tr className=" hover:bg-gray-300" key={item._id}>
               <td className="text-left">{item.recipeName}</td>
               <td className="text-left">{item.origin}</td>
               <td className="text-left">{item.dateCreated}</td>
@@ -110,7 +139,7 @@ export default function Home() {
         </table>
       </div>
       <div className="flex justify-end pr-14">
-        <button type="button" onClick={createRecipe} className="pl-2 pr-2 rounded-full hover:bg-gray-300"> + Add recipe </button>
+        <button type="button" onClick={() => createRecipe()} className="pl-2 pr-2 rounded-full hover:bg-gray-300"> + Add recipe </button>
       </div>
     </section>
   );
