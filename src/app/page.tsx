@@ -1,27 +1,28 @@
 "use client"
 import Image from "next/image";
-import { storedRecipe } from "./storage"
 import { useEffect, useState } from "react";
+import { getRecipes } from "@/db/database";
+import { recipes } from "@/db/schema";
 
+import { InferModel} from "drizzle-orm"
 
-interface Recipe {
-  id: number;
-  recipeName: string;
-  origin: string;
-  dateCreated: string;
-  ingridients: string;
-  steps: string;
-  rating: string;
-}
+type Recipe = InferModel<typeof recipes>;
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [header, setHeader] = useState<keyof Recipe>("recipeName");
+  const [recipes, setRecipes] = useState<Recipe[] | undefined>(undefined);
+  const [header, setHeader] = useState("recipeName");
   const [direction, setDirection] = useState("unsorted");
 
+  async function getAllRecipes() {
+    const result = await getRecipes()
+    if (result) {
+    setRecipes(result)
+    }
+  } 
+
   useEffect(() => {
-    setRecipes(storedRecipe)
+    getAllRecipes();
   }, []);
   
   function handleSearch(formData:FormData){
@@ -55,9 +56,10 @@ export default function Home() {
 
   function handleSort(header: keyof Recipe) {
     setHeader(header);
+    if (recipes === undefined) return
     let sortedRecipe = [...recipes].sort((a, b) => {
-      let nameA: string | number = a[header];
-      let nameB: string | number = b[header];
+      let nameA = a[header];
+      let nameB = b[header];
 
       if (typeof nameA === "string" && typeof nameB === "string") {
         nameA = nameA.toUpperCase();
@@ -121,10 +123,10 @@ export default function Home() {
           </thead>
           <tbody>
             {recipes && recipes.map((item) => (
-            <tr className=" hover:bg-gray-300" key={item.id}>
+            <tr className=" hover:bg-gray-300" key={item.recipeId}>
               <td className="text-left">{item.recipeName}</td>
               <td className="text-left">{item.origin}</td>
-              <td className="text-left">{item.dateCreated}</td>
+              <td className="text-left">{item.dateCreated.toLocaleDateString("en-GB", {day: "numeric", month: "long", year: "numeric"})}</td>
               <td className="text-left">{item.rating}</td>
             </tr>              
             ))}
