@@ -2,10 +2,10 @@
 import Image from "next/image";
 import { storedRecipe } from "./storage"
 import { useEffect, useState } from "react";
-import { getRecipesFromMongo } from "@/db/database"
+
 
 interface Recipe {
-  _id: any;
+  id: number;
   recipeName: string;
   origin: string;
   dateCreated: string;
@@ -20,15 +20,8 @@ export default function Home() {
   const [header, setHeader] = useState<keyof Recipe>("recipeName");
   const [direction, setDirection] = useState("unsorted");
 
-   useEffect(() => {
-    async function fetchData() {
-      const data: Array<Recipe> | any = await getRecipesFromMongo();
-      if (data) {
-      setRecipes(data)
-      }
-    }
-
-    fetchData();
+  useEffect(() => {
+    setRecipes(storedRecipe)
   }, []);
   
   function handleSearch(formData:FormData){
@@ -128,7 +121,7 @@ export default function Home() {
           </thead>
           <tbody>
             {recipes && recipes.map((item) => (
-            <tr className=" hover:bg-gray-300" key={item._id}>
+            <tr className=" hover:bg-gray-300" key={item.id}>
               <td className="text-left">{item.recipeName}</td>
               <td className="text-left">{item.origin}</td>
               <td className="text-left">{item.dateCreated}</td>
